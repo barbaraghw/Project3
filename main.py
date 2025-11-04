@@ -7,11 +7,11 @@ from whatsapp_sender import send_whatsapp_message
 from twilio.rest import Client
 
 ACCOUNT_SID = 'AC0b09562bba910c76e315aa6d90a1f097'
-AUTH_TOKEN = '2de5956dba42e31b70d6339979552ed6'
+AUTH_TOKEN = '89d0cb2c9d6662d54059a51aaa86a270'
 TWILIO_PHONE_NUMBER = 'whatsapp:+14155238886'
 YOUR_PHONE_NUMBER = 'whatsapp:+584241420016'
 
-EXCEL_FILE_NAME = 'Sales.xlsx'
+EXCEL_FILE_NAME = 'Ventas-Fundamentos.xlsx'
 REPORTS_FOLDER = 'Reports'
 REPORT_TEXT_FILE_NAME = 'Business_Report.pdf'
 REPORT_IMAGE_BASE_NAME = 'report_chart'
@@ -44,7 +44,7 @@ def main():
 
     print("\nAttempting to send reports to WhatsApp...")
     twilio_client = Client(ACCOUNT_SID, AUTH_TOKEN)
-    ngrok_public_url = 'https://c071e995a078.ngrok-free.app'
+    ngrok_public_url = 'https://3c0fc4c26d76.ngrok-free.app'
 
     media_urls_for_whatsapp = []
     text_report_url_to_send = None

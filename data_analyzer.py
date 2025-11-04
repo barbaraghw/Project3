@@ -4,7 +4,16 @@ import sys
 def _analyze_ventas_sheet(df_ventas):
     print("Analyzing 'VENTAS' sheet (Sales Data)...")
     ventas_results = {}
-
+    IGV_RATE = 1.18
+    if 'Precio Venta Real' in df_ventas.columns:
+        df_ventas['Precio Venta Sin IGV'] = df_ventas['Precio Venta Real'] / IGV_RATE
+        ventas_results['total_sales_with_igv'] = df_ventas['Precio Venta Real'].sum()
+        ventas_results['total_sales_without_igv'] = df_ventas['Precio Venta Sin IGV'].sum()
+        print("Total sales with and without IGV calculated.")
+    else:
+        ventas_results['total_sales_with_igv'] = 0
+        ventas_results['total_sales_without_igv'] = 0
+        print("Warning: 'Precio Venta Real' missing. Cannot calculate total sales.")
     if 'Precio Venta Real' in df_ventas.columns:
         ventas_results['total_sales'] = df_ventas['Precio Venta Real'].sum()
         ventas_results['average_sales_per_transaction'] = df_ventas['Precio Venta Real'].mean()
@@ -33,7 +42,35 @@ def _analyze_ventas_sheet(df_ventas):
         ventas_results['sales_by_sede'] = df_ventas.groupby('Sede')['Precio Venta Real'].sum().sort_values(ascending=False)
         print("Sales by Location (Sede) analyzed.")
     else: print("Warning: 'Sede' or 'Precio Venta Real' not found in 'VENTAS' sheet. Cannot analyze sales by location.")
+    
+    ventas_results['sales_without_igv_by_sede'] = pd.Series(dtype=float)
+    if 'Sede' in df_ventas.columns and 'Precio Venta Sin IGV' in df_ventas.columns:
+        ventas_results['sales_without_igv_by_sede'] = df_ventas.groupby('Sede')['Precio Venta Sin IGV'].sum().sort_values(ascending=False)
+        print("Sales without IGV by location (Sede) analyzed.")
 
+    ventas_results['top_selling_models'] = pd.Series(dtype=int)
+    if 'MODELO' in df_ventas.columns: # Asumiendo que 'MODELO' está en la hoja 'VENTAS'
+        ventas_results['top_selling_models'] = df_ventas['MODELO'].value_counts().head(5)
+        print("Top 5 selling vehicle models analyzed.")
+
+    ventas_results['unique_clients_count'] = 0
+    if 'ID_Cliente' in df_ventas.columns:
+        ventas_results['unique_clients_count'] = df_ventas['ID_Cliente'].nunique()
+        print(f"Count of unique clients calculated: {ventas_results['unique_clients_count']}")
+        ventas_results['sales_count_by_channel'] = pd.Series(dtype=int)
+    if 'Canal' in df_ventas.columns:
+        ventas_results['sales_count_by_channel'] = df_ventas['Canal'].value_counts()
+        print("Sales count by channel analyzed.")
+
+    ventas_results['client_segmentation_without_igv'] = pd.Series(dtype=int)
+    if 'Precio Venta Sin IGV' in df_ventas.columns:
+        # Definición de segmentos: AJUSTA LOS RANGOS (bins) Y ETIQUETAS (labels)
+        bins = [0, 5000, 15000, 30000, df_ventas['Precio Venta Sin IGV'].max() + 1]
+        labels = ['Bajo (<5k)', 'Medio (5k-15k)', 'Alto (15k-30k)', 'Premium (>30k)']
+        df_ventas['Segmento Cliente'] = pd.cut(df_ventas['Precio Venta Sin IGV'], bins=bins, labels=labels, right=False)
+        ventas_results['client_segmentation_without_igv'] = df_ventas['Segmento Cliente'].value_counts()
+        print("Client segmentation by sales price without IGV analyzed.")
+        
     ventas_results['sales_by_vendedor'] = pd.Series(dtype=float)
     if 'Vendedor' in df_ventas.columns and 'Precio Venta Real' in df_ventas.columns:
         ventas_results['sales_by_vendedor'] = df_ventas.groupby('Vendedor')['Precio Venta Real'].sum().sort_values(ascending=False)

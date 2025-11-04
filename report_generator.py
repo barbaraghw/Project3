@@ -118,6 +118,21 @@ def generate_text_report(analysis_results, output_folder, file_name):
         print(f"Error saving text report as PDF to '{full_path}': {e}")
         return None
 
+def _create_sales_without_igv_by_sede_chart(ventas_data, output_folder, base_image_name, extension):
+    if not ventas_data.get('sales_without_igv_by_sede', pd.Series()).empty:
+        plt.figure(figsize=(10, 6))
+        ventas_data['sales_without_igv_by_sede'].plot(kind='bar', color='darkorange')
+        plt.title('Ventas sin IGV por Sede (Suma)', fontsize=16)
+        plt.xlabel('Sede', fontsize=12)
+        plt.ylabel('Ventas sin IGV ($)', fontsize=12)
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        img_path = os.path.join(output_folder, f"{base_image_name}_sales_without_igv_by_sede{extension}")
+        try:
+            plt.savefig(img_path)
+            return img_path
+        finally: plt.close()
+    return None
 def _create_sales_by_vehicle_chart(ventas_data, output_folder, base_image_name, extension):
     if not ventas_data['sales_by_vehicle_id'].empty:
         plt.figure(figsize=(12, 7))
@@ -161,6 +176,58 @@ def _create_sales_by_channel_chart(ventas_data, output_folder, base_image_name, 
         except Exception as e:
             print(f"Error saving visual report '{img_path}': {e}")
             return None
+        finally: plt.close()
+    return None
+
+# Dentro de report_generator.py
+def _create_top_selling_models_chart(ventas_data, output_folder, base_image_name, extension):
+    if not ventas_data.get('top_selling_models', pd.Series()).empty:
+        plt.figure(figsize=(10, 6))
+        # Gráfico de barras horizontales (barh)
+        ventas_data['top_selling_models'].sort_values().plot(kind='barh', color='darkcyan')
+        plt.title('Top 5 Modelos de Vehículos más Vendidos (Conteo)', fontsize=16)
+        plt.xlabel('Cantidad de Ventas', fontsize=12)
+        plt.ylabel('Modelo', fontsize=12)
+        plt.tight_layout()
+        img_path = os.path.join(output_folder, f"{base_image_name}_top_selling_models{extension}")
+        try:
+            plt.savefig(img_path)
+            return img_path
+        finally: plt.close()
+    return None
+
+# Dentro de report_generator.py (modificación o nueva función)
+def _create_sales_count_by_channel_chart(ventas_data, output_folder, base_image_name, extension):
+    if not ventas_data.get('sales_count_by_channel', pd.Series()).empty:
+        plt.figure(figsize=(10, 6))
+        ventas_data['sales_count_by_channel'].head(5).plot(kind='bar', color='lightgreen')
+        plt.title('Top 5 Canales con más Ventas (Conteo)', fontsize=16)
+        plt.xlabel('Canal de Venta', fontsize=12)
+        plt.ylabel('Cantidad de Ventas', fontsize=12)
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        img_path = os.path.join(output_folder, f"{base_image_name}_sales_count_by_channel{extension}")
+        try:
+            plt.savefig(img_path)
+            return img_path
+        finally: plt.close()
+    return None
+
+# Dentro de report_generator.py
+def _create_client_segmentation_chart(ventas_data, output_folder, base_image_name, extension):
+    if not ventas_data.get('client_segmentation_without_igv', pd.Series()).empty:
+        plt.figure(figsize=(10, 10))
+        # Gráfico circular (pie)
+        plt.pie(ventas_data['client_segmentation_without_igv'], 
+                labels=ventas_data['client_segmentation_without_igv'].index, 
+                autopct='%1.1f%%', startangle=90, colors=plt.cm.Set3.colors)
+        plt.title('Segmento de Clientes por Ventas sin IGV', fontsize=16)
+        plt.axis('equal') # Asegura que el gráfico sea un círculo
+        plt.tight_layout()
+        img_path = os.path.join(output_folder, f"{base_image_name}_client_segmentation{extension}")
+        try:
+            plt.savefig(img_path)
+            return img_path
         finally: plt.close()
     return None
 
@@ -267,6 +334,18 @@ def generate_visual_report(analysis_results, output_folder, base_image_name, ext
 
         chart_path = _create_sales_over_time_chart(ventas_data, output_folder, base_image_name, extension)
         if chart_path: image_paths.append(chart_path)
+
+        path = _create_sales_without_igv_by_sede_chart(ventas_data, output_folder, base_image_name, extension)
+        if path: image_paths.append(path)
+
+        path = _create_top_selling_models_chart(ventas_data, output_folder, base_image_name, extension)
+        if path: image_paths.append(path)
+        
+        path = _create_sales_count_by_channel_chart(ventas_data, output_folder, base_image_name, extension)
+        if path: image_paths.append(path)
+        
+        path = _create_client_segmentation_chart(ventas_data, output_folder, base_image_name, extension)
+        if path: image_paths.append(path)
 
     if 'vehiculos' in analysis_results:
         vehiculos_data = analysis_results['vehiculos']
